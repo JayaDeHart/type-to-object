@@ -56,21 +56,26 @@ const handlePropertySignature = (
 };
 
 const checkTypeAndGetValue = (node: ts.TypeNode | undefined) => {
+  let value;
   if (!node) return undefined; // Safely handle undefined types
 
   if (ts.isUnionTypeNode(node)) {
-    return node.types.map((typeNode) => typeNode.getText());
+    value = node.types.map((typeNode) => typeNode.getText());
   }
 
   if (ts.isIntersectionTypeNode(node)) {
-    return node.types.map((typeNode) => typeNode.getText());
+    value = node.types.map((typeNode) => typeNode.getText());
   }
 
   if (ts.isTypeReferenceNode(node)) {
-    return node.getText();
+    value = node.getText();
   }
 
-  return node.getText();
+  value = node.getText();
+  if (value.startsWith('"')) {
+    value = value.slice(1, -1);
+  }
+  return value;
 };
 
 const visit = (node: ts.Node, output: any) => {
