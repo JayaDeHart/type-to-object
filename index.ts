@@ -1,5 +1,44 @@
 import * as ts from "typescript";
 
+const checkTypeAndGetValue = (node: ts.TypeNode | undefined) => {
+  let value;
+  if (!node) return undefined; // Safely handle undefined types
+
+  if (ts.isUnionTypeNode(node)) {
+    value = node.types.map((typeNode) => typeNode.getText());
+  }
+
+  if (ts.isIntersectionTypeNode(node)) {
+    value = node.types.map((typeNode) => typeNode.getText());
+  }
+
+  if (ts.isTypeReferenceNode(node)) {
+    value = node.getText();
+  }
+
+  value = node.getText();
+  if (value.startsWith('"')) {
+    value = value.slice(1, -1);
+  }
+  return value;
+};
+
+const handlePropertySignature = (
+  node: ts.PropertySignature,
+  output: any,
+  typeName: string
+) => {
+  const propertyName = node.name.getText();
+
+  if (!propertyName || !node.type) return;
+
+  const value = checkTypeAndGetValue(node.type);
+
+  if (value) {
+    output[typeName][propertyName] = value;
+  }
+};
+
 const handleInterfaceDeclaration = (
   node: ts.InterfaceDeclaration,
   output: any
@@ -37,45 +76,6 @@ const handleTypeAliasDeclaration = (
     const value = checkTypeAndGetValue(node.type);
     output[typeName] = value;
   }
-};
-
-const handlePropertySignature = (
-  node: ts.PropertySignature,
-  output: any,
-  typeName: string
-) => {
-  const propertyName = node.name.getText();
-
-  if (!propertyName || !node.type) return;
-
-  const value = checkTypeAndGetValue(node.type);
-
-  if (value) {
-    output[typeName][propertyName] = value;
-  }
-};
-
-const checkTypeAndGetValue = (node: ts.TypeNode | undefined) => {
-  let value;
-  if (!node) return undefined; // Safely handle undefined types
-
-  if (ts.isUnionTypeNode(node)) {
-    value = node.types.map((typeNode) => typeNode.getText());
-  }
-
-  if (ts.isIntersectionTypeNode(node)) {
-    value = node.types.map((typeNode) => typeNode.getText());
-  }
-
-  if (ts.isTypeReferenceNode(node)) {
-    value = node.getText();
-  }
-
-  value = node.getText();
-  if (value.startsWith('"')) {
-    value = value.slice(1, -1);
-  }
-  return value;
 };
 
 const visit = (node: ts.Node, output: any) => {
